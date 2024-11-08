@@ -17,19 +17,17 @@ from typing import Optional
 import logging
 
 # Third Party
-from datasets import Dataset, DatasetDict
 from transformers import AutoTokenizer
 
 # Local
 from tuning.config.configs import DataArguments
 from tuning.data.data_config import (
-    DataConfig,
     DataHandlerConfig,
     DataLoaderConfig,
     DataSetConfig,
     load_and_validate_data_config,
 )
-from tuning.data.data_processors import DataPreProcessor, get_dataprocessor
+from tuning.data.data_processors import get_dataprocessor
 from tuning.utils.preprocessing_utils import (
     JSON_INPUT_KEY,
     JSON_OUTPUT_KEY,
@@ -44,8 +42,6 @@ def process_dataargs(
     validation_dataset = False
     if data_args.validation_data_path:
         validation_dataset = True
-
-    dataset_text_field = data_args.dataset_text_field
 
     # Create a data processor with default loader config
     default_loader_config = DataLoaderConfig()
@@ -72,6 +68,8 @@ def process_dataargs(
     fn_kwargs = {}
     handlers = None
 
+    dataset_text_field = data_args.dataset_text_field
+
     # Use case specific handlers
     if is_train_data_pretokenized:
         # dataset_text_field is irrelevant to pretokenized datasets
@@ -95,7 +93,6 @@ def process_dataargs(
             )
             handlers = [handler]
     else:
-
         # TODO: These should be called DEFAULT in the name as they are hardcoded.
         fn_kwargs["input_field_name"] = JSON_INPUT_KEY
         fn_kwargs["output_field_name"] = JSON_OUTPUT_KEY
@@ -132,11 +129,10 @@ def process_dataargs(
     if validation_dataset:
         eval_dataset = data_processor.process_dataset_configs([eval_dataset_config])
         logging.info("Validation dataset length is %s", len(eval_dataset))
-    # dataset_text_field is irrelevant to pretokenized datasets
+
     return train_dataset, eval_dataset, dataset_text_field
 
 
-# TODO: This is very basic the handling of validation will be done by adding splitter.
 # For now assume 2 differnet arguments for training and validation dataset config files.
 # This is very limited but is done to keep first implementation minimal
 def process_dataconfig_file(dataconfigfile: str, tokenizer: AutoTokenizer):

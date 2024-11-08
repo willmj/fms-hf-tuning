@@ -15,7 +15,7 @@
 # Definition of some predefined data preprocessing functions that we need.
 
 # Standard
-from typing import Dict, List
+from typing import Dict
 
 # Third Party
 from transformers import AutoTokenizer
@@ -56,12 +56,12 @@ def tokenize_and_apply_input_masking(
 def apply_dataset_formatting(
     element: Dict[str, str], tokenizer: AutoTokenizer, dataset_text_field: str, **kwargs
 ):
-    if isinstance(element[dataset_text_field], list): # batched = True
-      return {
-          f"{dataset_text_field}": [  
-              text + tokenizer.eos_token for text in element[f"{dataset_text_field}"]
-          ]
-      }
+    if isinstance(element[dataset_text_field], list):  # batched = True
+        return {
+            f"{dataset_text_field}": [
+                text + tokenizer.eos_token for text in element[f"{dataset_text_field}"]
+            ]
+        }
     return {
         f"{dataset_text_field}": element[f"{dataset_text_field}"] + tokenizer.eos_token
     }
@@ -77,13 +77,11 @@ def apply_custom_data_formatting_template(
     template += tokenizer.eos_token
 
     # TODO: Eventually move the code here.
-    return custom_data_formatter(
-        element=element, formatted_dataset_field=dataset_text_field, template=template
-    )
+    return custom_data_formatter(element, template, dataset_text_field)
 
 
 AVAILABLE_DATA_HANDLERS = {
     "tokenize_and_apply_instruction_masking": tokenize_and_apply_input_masking,
     "apply_dataset_formatting": apply_dataset_formatting,
-    "apply_custom_data_formatting_template": apply_dataset_formatting,
+    "apply_custom_data_formatting_template": apply_custom_data_formatting_template,
 }

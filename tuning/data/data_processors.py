@@ -19,7 +19,7 @@ import logging
 import os
 
 # Third Party
-from datasets import Dataset, IterableDataset, DatasetDict
+from datasets import Dataset, DatasetDict, IterableDataset
 from datasets.exceptions import DatasetNotFoundError
 from transformers import AutoTokenizer
 import datasets
@@ -126,7 +126,7 @@ class HFBasedDataPreProcessor(DataPreProcessor):
             if d.sampling:
                 logging.warning("Sampling multiple datasets is not supported yet")
 
-            if d.data_handlers: # Execute the datahandlers
+            if d.data_handlers:  # Execute the datahandlers
                 for data_handler in d.data_handlers:
                     handler_name: str = data_handler.name
                     handler: callable = self.registered_handlers[handler_name]
@@ -157,8 +157,7 @@ class HFBasedDataPreProcessor(DataPreProcessor):
 
                     kwargs["fn_kwargs"] = dict(kwargs["fn_kwargs"], **extra_kwargs)
 
-                    # logging.info
-                    # assert ("Applying Handler : {data_handler} Args : {kwargs}") == ""
+                    logging.info("Applying Handler : {data_handler} Args : {kwargs}")
 
                     raw_datasets = raw_datasets.map(handler, **kwargs)
 
@@ -205,12 +204,12 @@ def get_dataprocessor(
 ) -> DataPreProcessor:
     loader = dataloaderconfig.type
     if loader == "default":
-        procesor = HFBasedDataPreProcessor(
+        processor = HFBasedDataPreProcessor(
             dataloaderconfig=dataloaderconfig,
             tokenizer=tokenizer,
             accelerator=accelerator,
         )
     else:
-        procesor = None
-    autoregister_available_handlers(procesor)
-    return procesor
+        processor = None
+    autoregister_available_handlers(processor)
+    return processor
