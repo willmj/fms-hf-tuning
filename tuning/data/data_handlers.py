@@ -21,8 +21,8 @@ from typing import Dict
 from transformers import AutoTokenizer
 
 # Local
+from tuning.data.data_preprocessing_utils import combine_sequence
 from tuning.utils.data_utils import custom_data_formatter
-from tuning.utils.preprocessing_utils import combine_sequence
 
 
 def tokenize_and_apply_input_masking(
@@ -38,8 +38,11 @@ def tokenize_and_apply_input_masking(
     # TODO: Eventually move the code here
     combined = combine_sequence(input, output, eos_token=tokenizer.eos_token)
 
-    tokenized_comb_seqs = tokenizer(combined, **tokenizer_kwargs)
-    tokenized_input = tokenizer(input, **tokenizer_kwargs)
+    fn_kwargs = tokenizer_kwargs.get("fn_kwargs", {})
+    tokenizer_inner_kwargs = fn_kwargs.get("tokenizer_kwargs", {})
+
+    tokenized_comb_seqs = tokenizer(combined, **tokenizer_inner_kwargs)
+    tokenized_input = tokenizer(input, **tokenizer_inner_kwargs)
 
     masked_labels = [-100] * len(
         tokenized_input.input_ids
