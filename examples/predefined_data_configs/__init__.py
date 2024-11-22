@@ -20,7 +20,9 @@ import os
 ### Constants used for data
 DATA_CONFIG_DIR = os.path.join(os.path.dirname(__file__))
 APPLY_CUSTOM_TEMPLATE_YAML = os.path.join(DATA_CONFIG_DIR, "apply_custom_template.yaml")
-PRETOKENIZED_JSON_DATA_YAML = os.path.join(DATA_CONFIG_DIR, "pretokenized_json_data.yaml")
+PRETOKENIZED_JSON_DATA_YAML = os.path.join(
+    DATA_CONFIG_DIR, "pretokenized_json_data.yaml"
+)
 TOKENIZE_AND_INSTRUCTION_MASKING_YAML = os.path.join(
     DATA_CONFIG_DIR, "tokenize_and_instruction_masking.yaml"
 )
