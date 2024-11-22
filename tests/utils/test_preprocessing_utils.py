@@ -6,7 +6,7 @@ import datasets
 import pytest
 
 # First Party
-from tests.data import (
+from tests.testdata import (
     MODEL_NAME,
     TWITTER_COMPLAINTS_DATA_INPUT_OUTPUT_JSON,
     TWITTER_COMPLAINTS_DATA_INPUT_OUTPUT_JSONL,
