@@ -423,7 +423,7 @@ def test_process_dataargs_pretokenized(data_args):
 )
 def test_process_dataset_configs(datafile, column_names, datasetconfigname):
     """Test process_dataset_configs for expected output."""
-    dataloaderconfig = DataLoaderConfig(type="default")
+    dataloaderconfig = DataLoaderConfig()
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
     processor = HFBasedDataPreProcessor(
         dataloaderconfig=dataloaderconfig,
