@@ -35,7 +35,7 @@ ARG USER_UID
 # Note this is tested to be working for version 3.9, 3.11, 3.12
 RUN dnf remove -y --disableplugin=subscription-manager \
         subscription-manager \
-    && dnf install -y python${PYTHON_VERSION} procps g++ python${PYTHON_VERSION}-devel \
+    && dnf install -y python${PYTHON_VERSION} procps g++ python${PYTHON_VERSION}-devel git \
     && ln -s /usr/bin/python${PYTHON_VERSION} /bin/python \
     && python -m ensurepip --upgrade \
     && python -m pip install --upgrade pip \
@@ -53,7 +53,7 @@ RUN useradd -u $USER_UID ${USER} -m -g 0 --system && \
 FROM base AS release-base
 
 # Removes the python code to eliminate possible CVEs.  Also removes dnf
-RUN rpm -e $(dnf repoquery python3-* -q --installed) dnf python3 yum crypto-policies-scripts
+# RUN rpm -e $(dnf repoquery python3-* -q --installed) dnf python3 yum crypto-policies-scripts
 
 
 ## CUDA Base ###################################################################
