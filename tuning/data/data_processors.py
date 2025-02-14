@@ -18,11 +18,11 @@ import logging
 import os
 
 # Third Party
+from accelerate.state import PartialState
 from datasets import Dataset, DatasetDict, IterableDataset, IterableDatasetDict
 from datasets.exceptions import DatasetNotFoundError
 from transformers import AutoTokenizer
 import datasets
-import torch
 
 # Local
 from tuning.data.data_config import DataConfig, DataPreProcessorConfig, DataSetConfig
@@ -273,6 +273,26 @@ class DataPreProcessor:
                 raw_datasets = IterableDatasetDict()
             else:
                 raw_datasets = DatasetDict()
+                
+            # Check if both are conflicting options before proceeding.
+            if d.rename_columns and d.retain_columns:
+                commmon = set(d.rename_columns.keys()) & set(d.retain_columns)
+                if commmon:
+                    raise ValueError(
+                        f"You are trying to retain {str(commmon)} columns"
+                        " which will be renamed via rename operation."
+                    )
+
+            if d.rename_columns:
+                logger.info("Renaming %s columns", str(d.rename_columns))
+                raw_dataset = raw_dataset.rename_columns(
+                    column_mapping=d.rename_columns
+                )
+                logger.info("Done")
+            if d.retain_columns:
+                logger.info("Retaining %s columns", str(d.retain_columns))
+                raw_dataset = raw_dataset.select_columns(column_names=d.retain_columns)
+                logger.info("Done")
 
             # Assume all is train split
             if isinstance(raw_dataset, (Dataset, IterableDataset)):
@@ -368,23 +388,10 @@ class DataPreProcessor:
         self, dataset_configs: List[DataSetConfig], **kwargs
     ) -> Union[Dataset, IterableDataset]:
         train_dataset = None
+        state = PartialState()
 
-        if torch.distributed.is_available() and torch.distributed.is_initialized():
-            if torch.distributed.get_rank() == 0:
-                logger.info("Processing data on rank 0...")
-                train_dataset = self._process_dataset_configs(dataset_configs, **kwargs)
-            else:
-                train_dataset = None
-
-            # Use broadcast_object_list to share the dataset object across ranks
-            # TODO: Check if torch.distributed.barrier() is called in broadcast_object_list()
-            # See https://github.com/pytorch/pytorch/issues/56142
-            # for why the list is shared like this
-            to_share = [train_dataset]
-            torch.distributed.broadcast_object_list(to_share, src=0)
-            train_dataset = to_share[0]
-        else:
-            logger.info("Processing data...")
+        # The main_process_first context ensures that the main process runs first
+        with state.main_process_first():
             train_dataset = self._process_dataset_configs(dataset_configs, **kwargs)
 
         return train_dataset
