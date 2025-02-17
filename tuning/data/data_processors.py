@@ -16,6 +16,7 @@
 from typing import Callable, Dict, List, Union
 import logging
 import os
+import torch
 
 # Third Party
 from accelerate.state import PartialState
@@ -389,13 +390,25 @@ class DataPreProcessor:
     ) -> Union[Dataset, IterableDataset]:
         train_dataset = None
         state = PartialState()
+        logger.info("Starting profiling for process_dataset_configs")
 
-        # The main_process_first context ensures that the main process runs first
-        with state.main_process_first():
-            train_dataset = self._process_dataset_configs(dataset_configs, **kwargs)
+        with torch.profiler.profile(
+            activities=[torch.profiler.ProfilerActivity.CPU, torch.profiler.ProfilerActivity.CUDA],
+            record_shapes=True,
+            profile_memory=True,
+            with_stack=True
+        ) as prof:
+            with state.main_process_first():
+                train_dataset = self._process_dataset_configs(dataset_configs, **kwargs)
+                print("train dataset", train_dataset)
+
+        logger.info("Finished profiling for process_dataset_configs")
+        logger.info(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=10))
+
+        # Optionally export for deeper analysis in Chrome Tracing
+        prof.export_chrome_trace("process_dataset_configs_trace.json")
 
         return train_dataset
-
 
 def get_datapreprocessor(
     processor_config: DataPreProcessorConfig,
