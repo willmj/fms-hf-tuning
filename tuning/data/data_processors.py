@@ -121,6 +121,7 @@ class DataPreProcessor:
             load_path = builder if builder else data_path
 
             try:
+                print("hit 7")
                 return datasets.load_dataset(path=load_path, **load_kwargs)
             except DatasetNotFoundError as e:
                 # Reraise with a more context-specific message if needed
@@ -190,6 +191,7 @@ class DataPreProcessor:
 
             # CASE 3: User passes files/folder/pattern/HF_dataset which has no builder
             # Still no builder, try if this is a dataset id
+            print("HIT CASE WHERE FOLDER")
             return _load_dataset(data_path=dataset_path, streaming=streaming)
 
         if datafile:
@@ -200,13 +202,20 @@ class DataPreProcessor:
         all_datasets = []
 
         for data_path in data_paths:
+            print("hit 6")
+            print(data_path)
             dataset = _try_load_dataset(data_path, builder, streaming)
+            print("hit 8")
             if isinstance(dataset, IterableDataset):
                 dataset = resolve_iterable_dataset_features(dataset)
+            print("hit 9")
             all_datasets.append(dataset)
 
         # Logs warning if datasets have different columns
+        print("hit 10")
         validate_mergeable_datasets(all_datasets)
+        print(all_datasets)
+        print("hit 11")
 
         # Concatenate all datasets
         try:
@@ -214,6 +223,8 @@ class DataPreProcessor:
                 return all_datasets[0]
 
             raw_datasets = datasets.concatenate_datasets(all_datasets)
+            print(raw_datasets)
+            print("hit 12")
             logger.info(
                 "Datasets concatenated from %s .Concatenated dataset columns: %s",
                 datasetconfig.name,
@@ -231,12 +242,15 @@ class DataPreProcessor:
     ) -> Union[Dataset, IterableDataset]:
 
         splitName = "train"  # default
+        print("hit 1")
 
         all_datasetdicts = []
         sampling_probabilities = []
+        print("hit 2")
 
         # quick check to see if we are sampling and if we need to throw error.
         sampling_probabilities = [d.sampling for d in dataset_configs if d.sampling]
+        print("hit 3")
 
         if len(sampling_probabilities) > 0:
             if len(sampling_probabilities) != len(dataset_configs):
@@ -255,18 +269,22 @@ class DataPreProcessor:
                 " the given datasets will be concatenated."
             )
             sample_datasets = False
+        print("hit 4")
 
         logger.info("Starting DataPreProcessor...")
         # Now Iterate over the multiple datasets provided to us to process
-        for d in dataset_configs:
+        for i, d in enumerate(dataset_configs):
+            print("hit 5 and", i, "dataset")
             logger.info("Loading %s", d.name)
 
             # In future the streaming etc go as kwargs of this function
             raw_dataset = self.load_dataset(
                 d, self.processor_config.streaming, splitName
             )
+            print("hit 13")
             if isinstance(raw_dataset, IterableDataset):
                 raw_dataset = resolve_iterable_dataset_features(raw_dataset)
+            print("hit 14")
 
             logger.info("Loaded raw dataset : %s", str(raw_dataset))
 
@@ -296,10 +314,12 @@ class DataPreProcessor:
                 logger.info("Done")
 
             # Assume all is train split
+            print("hit 15")
             if isinstance(raw_dataset, (Dataset, IterableDataset)):
                 raw_datasets[splitName] = raw_dataset
             else:
                 raw_datasets = raw_dataset
+            print("hit 16")
 
             if d.data_handlers:  # Execute the datahandlers
                 for data_handler in d.data_handlers:
@@ -309,12 +329,16 @@ class DataPreProcessor:
 
                     if "batched" not in kwargs:
                         kwargs["batched"] = False
+                    
+                    print("hit 17")
 
                     column_names = raw_datasets[splitName].column_names
 
                     # remove __content__ from all processing
                     if column_names and "__content__" in column_names:
                         column_names.remove("__content__")
+                    
+                    print("hit 18")
 
                     if "remove_columns" not in kwargs:
                         kwargs["remove_columns"] = None
@@ -331,9 +355,13 @@ class DataPreProcessor:
                                 "num_proc is not applicable for \
                                             IterableDatasets and has been removed."
                             )
+                    
+                    print("hit 19")
 
                     if "fn_kwargs" not in kwargs:
                         kwargs["fn_kwargs"] = {}
+                    
+                    print("hit 20")
 
                     kwargs["fn_kwargs"]["tokenizer"] = self.tokenizer
                     kwargs["fn_kwargs"]["column_names"] = column_names
@@ -344,8 +372,12 @@ class DataPreProcessor:
 
                     raw_datasets = raw_datasets.map(handler, **kwargs)
 
+                    print("hit 21")
+
             # Append the processed datasets to the final dict
             all_datasetdicts.append(raw_datasets)
+
+            print("hit 22")
 
         # This is a dict of { split: list[datasets] }
         final_datasets = {}
@@ -355,6 +387,8 @@ class DataPreProcessor:
                     final_datasets[k] = [v]
                 else:
                     final_datasets[k].append(v)
+        
+        print("hit 22")
 
         if sample_datasets:
             strategy = self.processor_config.sampling_stopping_strategy
@@ -378,10 +412,14 @@ class DataPreProcessor:
                 final_datasets[k] = (
                     v[0] if len(v) == 1 else datasets.concatenate_datasets(v)
                 )
+        
+        print("hit 23")
 
         train_dataset = final_datasets.get("train", None)
         if isinstance(train_dataset, IterableDataset):
             train_dataset = resolve_iterable_dataset_features(train_dataset)
+        
+        print("hit 24")
 
         return train_dataset
 
