@@ -171,6 +171,10 @@ def train(
     else:
         requested_trackers = set()
 
+    # Overwrite typical timeout
+    if train_args.timeout:
+        train_args.ddp_timeout = train_args.timeout
+
     # Ensure file logging is present
     if FILE_LOGGING_TRACKER not in requested_trackers:
         requested_trackers.add(FILE_LOGGING_TRACKER)
@@ -250,6 +254,10 @@ def train(
     )
 
     if data_args.chat_template:
+        # TODO: passing "/n" through cli causes parsing issues,
+        # hence providing a temporary fix
+        data_args.chat_template = data_args.chat_template.replace(r"\n", "\n")
+
         logger.info("adding chat_template to the tokenizer")
         if tokenizer.chat_template:
             logger.warning(
@@ -296,6 +304,13 @@ def train(
             else:
                 tokenizer.eos_token = configs.DEFAULT_EOS_TOKEN
                 special_tokens_dict["eos_token"] = configs.DEFAULT_EOS_TOKEN
+
+    # adds user specified special tokens to vocab
+    if data_args.add_special_tokens:
+        logger.info(
+            "Adding user-defined special tokens: %s ", data_args.add_special_tokens
+        )
+        special_tokens_dict["additional_special_tokens"] = data_args.add_special_tokens
 
     # TODO: lower priority but understand if resizing impacts inference quality and why its needed.
     # It makes sense if we manipulate tokenizer that we also save it and provide it to inference.

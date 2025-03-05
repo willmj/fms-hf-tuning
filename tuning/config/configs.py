@@ -122,6 +122,14 @@ class DataArguments:
             Passed in conjunction with response_template"
         },
     )
+    add_special_tokens: List[str] = field(
+        default=None,
+        metadata={
+            "help": "List of special tokens to be added to the tokenizer's vocabulary. \
+            Used to add Special Tokens to Tokenizer's Vocabulary,\
+            Add special tokens as new tokens and increase vocabulary and model embedding size."
+        },
+    )
 
 
 @dataclass
@@ -180,6 +188,16 @@ class TrainingArguments(transformers.TrainingArguments):
             By default, 'passive' level is set which keeps the \
             current log level for the Transformers library (which will be 'warning` by default) \
             Other possible values are 'debug', 'info', 'warning', 'error' and 'critical'"
+        },
+    )
+    timeout: int = field(
+        default=7200,
+        metadata={
+            "help": "The timeout for `torch.distributed.init_process_group` calls, \
+            used to avoid GPU socket timeouts when performing slow operations in distributed \
+            runnings. Please refer the [PyTorch documentation] \
+            (https://pytorch.org/docs/stable/distributed.html#torch.distributed.init_process_group) \
+            for more information"
         },
     )
 
