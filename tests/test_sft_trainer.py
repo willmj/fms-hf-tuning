@@ -1349,18 +1349,19 @@ def test_run_e2e_with_hf_dataset_id(data_args):
     reason="Only runs if fms-accelerate is installed along with accelerated-moe plugin",
 )
 @pytest.mark.parametrize(
-    "dataset_path",
+    "model_name, dataset_path",
     [
-        TWITTER_COMPLAINTS_DATA_JSONL,
+        ("Isotonic/TinyMixtral-4x248M-MoE", TWITTER_COMPLAINTS_DATA_JSONL),
+        ("katuni4ka/tiny-random-granite-moe", TWITTER_COMPLAINTS_DATA_JSONL),
     ],
 )
-def test_run_moe_ft_and_inference(dataset_path):
+def test_run_fast_moe_ft_and_inference(model_name, dataset_path):
     """Check if we can finetune a moe model and check if hf checkpoint is created"""
     with tempfile.TemporaryDirectory() as tempdir:
         data_args = copy.deepcopy(DATA_ARGS)
         data_args.training_data_path = dataset_path
         model_args = copy.deepcopy(MODEL_ARGS)
-        model_args.model_name_or_path = "Isotonic/TinyMixtral-4x248M-MoE"
+        model_args.model_name_or_path = model_name
         train_args = copy.deepcopy(TRAIN_ARGS)
         train_args.output_dir = tempdir
         fast_moe_config = FastMoeConfig(fast_moe=FastMoe(ep_degree=1))
