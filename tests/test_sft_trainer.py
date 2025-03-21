@@ -1403,7 +1403,7 @@ def test_run_fast_moe_lora_and_inference(model_name, dataset_path):
         fast_moe_config = FastMoeConfig(fast_moe=FastMoe(ep_degree=1))
 
         sft_trainer.train(
-            MODEL_ARGS, DATA_ARGS, train_args, base_lora_args, fast_moe_config=fast_moe_config
+            model_args, data_args, train_args, base_lora_args, fast_moe_config=fast_moe_config
         )
         _test_run_inference(
             checkpoint_path=os.path.join(
