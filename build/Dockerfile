@@ -36,7 +36,6 @@ ARG USER_UID
 RUN dnf remove -y --disableplugin=subscription-manager \
         subscription-manager \
     && dnf install -y python${PYTHON_VERSION} procps g++ python${PYTHON_VERSION}-devel \
-    && dnf install -y dnf-plugins-core \
     && ln -s /usr/bin/python${PYTHON_VERSION} /bin/python \
     && python -m ensurepip --upgrade \
     && python -m pip install --upgrade pip \
@@ -67,6 +66,8 @@ ENV CUDA_VERSION=12.1.0 \
     NVIDIA_DRIVER_CAPABILITIES=compute,utility \
     NV_CUDA_CUDART_VERSION=12.1.55-1 \
     NV_CUDA_COMPAT_VERSION=530.30.02-1
+
+RUN dnf install -y dnf-plugins-core && dnf clean all
 
 RUN dnf config-manager \
        --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo \
